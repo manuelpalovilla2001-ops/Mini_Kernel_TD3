@@ -251,7 +251,6 @@ _start:
       BL _pag_init
 
       LDR R0, =L1_TABLE_BASE        /* Cargar TTBR0 con dirección base */
-      ORR R0, R0, #0x1              /* Añadir bit C = 1 (Inner Non-cacheable) */
       MCR p15, 0, R0, c2, c0, 0     /* Escribir en TTBR0 */
 
       LDR R0, =0x55555555
@@ -880,7 +879,6 @@ _switch_context:
       MOV R1, #0
       MCR p15, 0, R1, c13, c0, 1
       ISB
-      ORR R7, R7, #0x1              /* Añadir bit C = 1 (Inner Non-cacheable) */
       MCR p15, 0, R7, c2, c0, 0     /* TTBR0 <= R7 */
       ISB
       MCR p15, 0, R5, c13, c0, 1    /* CONTEXTIDR <= R5 (ASID/PROCID) */
