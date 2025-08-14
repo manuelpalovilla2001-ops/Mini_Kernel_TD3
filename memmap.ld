@@ -12,8 +12,14 @@ ENTRY(_start)
 _RESET_VECTOR_VMA   = 0x00000000;
 _BOOT_VMA           = 0x70010000;
 _APP_VMA            = 0x70030000;
+_TASK_01_VMA        = 0x70040000;
+_TASK_02_VMA        = 0x70040000;
 _STACK_VMA          = 0x70060000;
+_DATA_01_VMA        = 0x700A0000;
+_DATA_02_VMA        = 0x700A0000;
 _DATA_VMA           = 0x81000000;
+_BSS_01_VMA         = 0x70100000;
+_BSS_02_VMA         = 0x70100000;
 _BSS_VMA            = 0x82000000;
 
 /* 
@@ -27,8 +33,7 @@ _BSS_VMA            = 0x82000000;
 
 SECTIONS
 {
-    . =_BOOT_VMA; /* VMA */
-    .boot : AT(_BOOT_VMA) /* LMA */
+    .boot _BOOT_VMA : AT(_BOOT_VMA) /* LMA */
     {
         . = ALIGN(4);
         __boot_start__ = .;
@@ -36,8 +41,7 @@ SECTIONS
         __boot_end__ = .;
     }
 
-    . =_APP_VMA; /* VMA */
-    .text : AT( LOADADDR(.boot) + SIZEOF(.boot) ) /* LMA */
+    .text _APP_VMA : AT( LOADADDR(.boot) + SIZEOF(.boot) ) /* LMA */
     { 
         . = ALIGN(4);
         __text_start__ = .;
@@ -46,8 +50,26 @@ SECTIONS
     }
     __text_start_lma__ = LOADADDR(.text);
 
-    . =_STACK_VMA; /* VMA */
-    .stack : AT ( LOADADDR(.text) + SIZEOF(.text)) /* LMA */    
+    .text_01 _TASK_01_VMA : AT( LOADADDR(.text) + SIZEOF(.text) ) /* LMA */
+    { 
+        . = ALIGN(4);
+        __task_01_start__ = .;
+        *(.text_01*) 
+        __task_01_end__ = .;
+    }
+    __task_01_start_lma__ = LOADADDR(.text_01);
+
+    .text_02 _TASK_02_VMA : AT( LOADADDR(.text_01) + SIZEOF(.text_01) ) /* LMA */
+    { 
+        . = ALIGN(4);
+        __task_02_start__ = .;
+        *(.text_02*) 
+        __task_02_end__ = .;
+    }
+    __task_02_start_lma__ = LOADADDR(.text);
+
+
+    .stack _STACK_VMA : AT ( LOADADDR(.text_02) + SIZEOF(.text_02)) /* LMA */    
     {
         __stack_start_ = .;
         __stack_end_svc__ = .;
@@ -79,11 +101,40 @@ SECTIONS
         . += 4K;
         . = ALIGN(4);
         __stack_start_und__ = .;
+
+        __stack_end_task02__ = .;
+        . += 4K;
+        . = ALIGN(4);
+        __stack_start_task02__ = .;
+
+        __stack_end_task01__ = .;
+        . += 4K;
+        . = ALIGN(4);
+        __stack_start_task01__ = .;
         __stack_end_ = .;
     }
 
-    . =_DATA_VMA; /* VMA */
-    .data : AT( LOADADDR(.stack) + SIZEOF(.stack) ) /* LMA */
+    .data_01 _DATA_01_VMA : AT( LOADADDR(.stack) + SIZEOF(.stack) ) /* LMA */
+    {
+        . = ALIGN(4);
+        __data_01_start__ = .;
+        *(.data_01*)
+        __data_01_end__ = .;
+    }
+
+    __data_01_start_lma__ = LOADADDR(.data_01);
+
+    .data_02 _DATA_02_VMA : AT( LOADADDR(.data_01) + SIZEOF(.data_01) ) /* LMA */
+    {
+        . = ALIGN(4);
+        __data_02_start__ = .;
+        *(.data_02*)
+        __data_02_end__ = .;
+    }
+
+    __data_02_start_lma__ = LOADADDR(.data_02);
+
+    .data _DATA_VMA : AT( LOADADDR(.data_02) + SIZEOF(.data_02) ) /* LMA */
     {
         . = ALIGN(4);
         __data_start__ = .;
@@ -93,8 +144,23 @@ SECTIONS
 
     __data_start_lma__ = LOADADDR(.data);
 
-    . =_BSS_VMA; /* VMA */
-    .bss : AT (LOADADDR(.data) + SIZEOF(.data)) /* LMA */    
+    .bss_01 _BSS_01_VMA : AT (LOADADDR(.data) + SIZEOF(.data)) /* LMA */    
+    {
+        . = ALIGN(4);
+        __bss_01_start__ = .;
+        . += 128K;
+        __bss_01_end__ = .;
+    }
+
+    .bss_02 _BSS_02_VMA : AT (LOADADDR(.bss_01) + SIZEOF(.bss_01)) /* LMA */    
+    {
+        . = ALIGN(4);
+        __bss_02_start__ = .;
+        . += 128K;
+        __bss_02_end__ = .;
+    }
+
+    .bss _BSS_VMA : AT (LOADADDR(.bss_02) + SIZEOF(.bss_02)) /* LMA */    
     {
         . = ALIGN(4);
         __bss_start__ = .;
@@ -102,8 +168,7 @@ SECTIONS
         __bss_end__ = .;
     }
 
-    . =_RESET_VECTOR_VMA; /* VMA */
-    .reset : AT( LOADADDR(.bss) + SIZEOF(.bss) ) /* LMA */
+    .reset _RESET_VECTOR_VMA : AT( LOADADDR(.bss) + SIZEOF(.bss) ) /* LMA */
     {
         . = ALIGN(4);
         __reset_start__ = .;
